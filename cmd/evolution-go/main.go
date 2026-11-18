@@ -45,11 +45,13 @@ import (
 	label_repository "github.com/evolution-foundation/evolution-go/pkg/label/repository"
 	label_service "github.com/evolution-foundation/evolution-go/pkg/label/service"
 	logger_wrapper "github.com/evolution-foundation/evolution-go/pkg/logger"
+	mcp_server "github.com/evolution-foundation/evolution-go/pkg/mcp"
 	message_handler "github.com/evolution-foundation/evolution-go/pkg/message/handler"
 	message_model "github.com/evolution-foundation/evolution-go/pkg/message/model"
 	message_repository "github.com/evolution-foundation/evolution-go/pkg/message/repository"
 	message_service "github.com/evolution-foundation/evolution-go/pkg/message/service"
 	auth_middleware "github.com/evolution-foundation/evolution-go/pkg/middleware"
+	"github.com/evolution-foundation/evolution-go/pkg/msgstore"
 	newsletter_handler "github.com/evolution-foundation/evolution-go/pkg/newsletter/handler"
 	newsletter_service "github.com/evolution-foundation/evolution-go/pkg/newsletter/service"
 	passkey_handler "github.com/evolution-foundation/evolution-go/pkg/passkey/handler"
@@ -241,6 +243,18 @@ func setupRouter(db *gorm.DB, authDB *sql.DB, sqliteDB *sql.DB, config *config.C
 		server_handler.NewServerHandler(),
 	).AssignRoutes(r)
 
+	// MCP endpoint (/mcp) — no-op unless MCP_ENABLED=true.
+	mcp_server.Register(r, mcp_server.Deps{
+		InstanceService: instanceService,
+		SendService:     sendMessageService,
+		UserService:     userService,
+		GroupService:    groupService,
+		MessageService:  messageService,
+		Clients:         clientPointer,
+		Store:           msgstore.Default(),
+		Version:         version,
+	})
+
 	if config.ConnectOnStartup {
 		go whatsmeowService.ConnectOnStartup(config.ClientName)
 	}
@@ -403,6 +417,14 @@ func main() {
 		}
 	} else {
 		logger.LogInfo("RabbitMQ URL not configured, skipping RabbitMQ connection")
+	}
+
+	// Local SQLite copy of message content — no-op unless MESSAGE_STORE_ENABLED=true.
+	// Must be ready before setupRouter, which starts the WhatsApp clients.
+	if store, err := msgstore.InitFromEnv(); err != nil {
+		logger.LogError("Message store disabled, failed to open: %v", err)
+	} else if store != nil {
+		defer store.Close()
 	}
 
 	r := setupRouter(db, authDB, sqliteDB, cfg, conn, exPath, runtimeCtx)

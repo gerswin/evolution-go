@@ -24,6 +24,7 @@ import (
 	config "github.com/evolution-foundation/evolution-go/pkg/config"
 	instance_model "github.com/evolution-foundation/evolution-go/pkg/instance/model"
 	logger_wrapper "github.com/evolution-foundation/evolution-go/pkg/logger"
+	"github.com/evolution-foundation/evolution-go/pkg/msgstore"
 	"github.com/evolution-foundation/evolution-go/pkg/utils"
 	whatsmeow_service "github.com/evolution-foundation/evolution-go/pkg/whatsmeow/service"
 	"github.com/gabriel-vasile/mimetype"
@@ -2790,6 +2791,8 @@ func (s *sendService) SendMessage(instance *instance_model.Instance, msg *waE2E.
 		ServerID:  response.ServerID,
 		Type:      messageType,
 	}
+
+	msgstore.RecordSent(instance.Id, messageInfo, msg) // no-op unless MESSAGE_STORE_ENABLED
 
 	messageSent := &MessageSendStruct{
 		Info:    messageInfo,

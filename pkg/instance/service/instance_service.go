@@ -19,6 +19,7 @@ import (
 	instance_repository "github.com/evolution-foundation/evolution-go/pkg/instance/repository"
 	event_types "github.com/evolution-foundation/evolution-go/pkg/internal/event_types"
 	logger_wrapper "github.com/evolution-foundation/evolution-go/pkg/logger"
+	"github.com/evolution-foundation/evolution-go/pkg/msgstore"
 	"github.com/evolution-foundation/evolution-go/pkg/utils"
 	whatsmeow_service "github.com/evolution-foundation/evolution-go/pkg/whatsmeow/service"
 	"go.mau.fi/whatsmeow"
@@ -611,6 +612,8 @@ func (i instances) Delete(id string) error {
 	if err != nil {
 		return err
 	}
+
+	msgstore.PurgeInstance(id) // no-op unless MESSAGE_STORE_ENABLED
 
 	return nil
 }

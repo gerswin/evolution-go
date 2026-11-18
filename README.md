@@ -28,6 +28,42 @@
 
 ---
 
+## New in this fork: MCP server, OAuth and message history
+
+This fork adds a [Model Context Protocol](https://modelcontextprotocol.io) server, so assistants such as **Claude** or **ChatGPT** can read your WhatsApp chats and send messages through an instance. Everything is opt-in and off by default.
+
+- **MCP server at `/mcp`** — Streamable HTTP, 14 tools: `get_status`, `list_chats`, `get_messages`, `search_messages`, `list_contacts`, `check_numbers`, `list_groups`, `get_group_info`, `send_text`, `send_media`, `send_location`, `send_poll`, `react_to_message`, `mark_read`. Each session only sees one instance.
+- **Built-in OAuth 2.1 server** — dynamic client registration, authorization code with PKCE and rotating refresh tokens, so Claude.ai and ChatGPT custom connectors work without extra infrastructure. The user pastes the instance token once on a consent page. Clients that can send headers (Claude Code, Claude Desktop) can use the instance token directly.
+- **SQLite message store** — keeps the text of received and sent messages, plus the history WhatsApp syncs when a device is linked, so conversations can be listed, read and searched. Media files are not stored, only their type, caption and file name.
+- **Docker Compose example** — [`docker/examples/docker-compose.mcp.yml`](./docker/examples/docker-compose.mcp.yml) starts the API with all of the above enabled.
+
+### Enable it
+
+```env
+MCP_ENABLED=true
+MESSAGE_STORE_ENABLED=true                    # required for the chat history tools
+MCP_PUBLIC_URL=https://your-api.example.com   # public https origin, needed for OAuth
+```
+
+### Connect an assistant
+
+**Claude.ai / ChatGPT** — add a custom connector with the URL `https://your-api.example.com/mcp`, then paste the instance token on the authorization page.
+
+**Claude Code**
+
+```bash
+claude mcp add --transport http whatsapp https://your-api.example.com/mcp \
+  --header "Authorization: Bearer <instance-token>"
+```
+
+OAuth needs the API reachable over public HTTPS. With a tunnel or reverse proxy, only `/mcp`, `/oauth/*` and `/.well-known/oauth-*` have to be exposed; the rest of the API and the manager can stay private.
+
+The sending tools deliver real messages, and the message store holds private conversations in plain text, so protect the instance tokens and the `dbdata` directory accordingly.
+
+Full guide (in Spanish), including a cloudflared setup: [docs/wiki/recursos-avancados/mcp-server.md](./docs/wiki/recursos-avancados/mcp-server.md).
+
+---
+
 ## About
 
 **Evolution Go** is a high-performance WhatsApp API built in Go. Part of the Evolution Foundation ecosystem, it provides a robust, lightweight solution for WhatsApp integration using the [whatsmeow](https://github.com/tulir/whatsmeow) library.

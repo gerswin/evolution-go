@@ -43,6 +43,7 @@ import (
 	logger_wrapper "github.com/evolution-foundation/evolution-go/pkg/logger"
 	message_model "github.com/evolution-foundation/evolution-go/pkg/message/model"
 	message_repository "github.com/evolution-foundation/evolution-go/pkg/message/repository"
+	"github.com/evolution-foundation/evolution-go/pkg/msgstore"
 	"github.com/evolution-foundation/evolution-go/pkg/passkey/ceremony"
 	poll_service "github.com/evolution-foundation/evolution-go/pkg/poll/service"
 	storage_interfaces "github.com/evolution-foundation/evolution-go/pkg/storage/interfaces"
@@ -538,6 +539,7 @@ func (w whatsmeowService) StartClient(cd *ClientData) {
 	}
 
 	mycli.eventHandlerID = mycli.WAClient.AddEventHandler(mycli.myEventHandler)
+	msgstore.Attach(mycli.WAClient, cd.Instance.Id) // no-op unless MESSAGE_STORE_ENABLED
 
 	// Armazena o MyClient no map para permitir atualizações posteriores
 	w.myClientPointer[cd.Instance.Id] = mycli

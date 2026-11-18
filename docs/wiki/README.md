@@ -97,6 +97,7 @@ Funcionalidades avançadas para casos de uso complexos.
 |-----------|-----------|
 | [**Sistema de Eventos**](./recursos-avancados/events-system.md) | Webhooks, RabbitMQ, NATS, WebSocket |
 | [**Armazenamento de Mídia**](./recursos-avancados/media-storage.md) | MinIO/S3, presigned URLs |
+| [**Servidor MCP**](./recursos-avancados/mcp-server.md) | Conectar Claude e outros assistentes, histórico em SQLite |
 | [**Conexão QR Code**](./recursos-avancados/qrcode-connection.md) | Fluxo de autenticação detalhado |
 | [**Multi-Device**](./recursos-avancados/multi-device.md) | Protocolo Multi-Device do WhatsApp |
 
